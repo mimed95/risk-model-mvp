@@ -1,0 +1,52 @@
+# Risk Classifier System Prompt
+
+This file outlines the key steps and configurations to build a risk classifier system using a Gradient Boosting Classifier. The system uses macroeconomic data to classify risk into Low, Medium, or High categories for stress testing scenarios.
+
+## Step 1: Data Collection
+- **Access FRED API:** Register for an API key at [FRED](https://fred.stlouisfed.org/) and install the `fredapi` package with `pip install fredapi`.
+- **Download Variables:**
+  - Unemployment Rate (`UNRATE`)
+  - GDP Growth Rate (`GDPC1`, calculate monthly growth rate)
+  - 10-Year Treasury Yield (`DGS10`, average daily to monthly)
+  - S&P 500 Index (`SP500`, average daily to monthly)
+  - Housing Price Index (`CSUSHPISA`)
+  - Inflation Rate (`CPIAUCSL`, calculate monthly inflation)
+  - St. Louis Fed Financial Stress Index (`STLFSI3`, average daily to monthly)
+- **Time Period:** January 2000 to December 2020
+
+## Step 2: Data Preparation
+- **Standardize Frequency:** Interpolate GDP growth to monthly; average daily data (e.g., Treasury Yield, S&P 500, FSI) to monthly.
+- **Merge Data:** Combine all variables into a single DataFrame using a common date index.
+- **Define Risk Thresholds:** Calculate the 25th and 75th percentiles of the Financial Stress Index (FSI).
+- **Assign Risk Categories:**
+  - Low Risk (0): FSI < 25th percentile
+  - Medium Risk (1): 25th percentile ≤ FSI ≤ 75th percentile
+  - High Risk (2): FSI > 75th percentile
+- **Handle Missing Values:** Use forward-fill or interpolation to address gaps.
+- **Feature Engineering (Optional):** Add lagged variables (e.g., 1-month lag of Unemployment Rate).
+
+## Step 3: Model Training
+- **Split Dataset:** Allocate 80% for training and 20% for testing.
+- **Define Features and Target:** Use macroeconomic variables as features; risk categories (0, 1, 2) as the target.
+- **Initialize Model:** Use `GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42)` from scikit-learn.
+- **Train Model:** Fit the model to the training data.
+- **Evaluate:** Assess performance with accuracy and confusion matrix on the test set.
+- **Tune Hyperparameters (Optional):** Apply `GridSearchCV` to optimize `n_estimators`, `learning_rate`, or `max_depth`.
+
+## Step 4: Scenario Classification
+- **Prepare Scenario Input:** Create a DataFrame with user-provided values for the six macroeconomic variables.
+- **Predict Risk Category:** Use the trained model to classify the scenario.
+- **Map Prediction:** Convert numerical output to labels: 0 → "Low", 1 → "Medium", 2 → "High".
+- **Explain Prediction (Optional):** Display feature importances to highlight key risk drivers.
+
+## Step 5: Deployment (Optional)
+- **Save Model:** Export the trained model using `joblib` (e.g., `joblib.dump(model, 'risk_classifier.pkl')`).
+- **Build Interface:** Develop a Flask app to accept user inputs and return predictions.
+- **Test Interface:** Use POST requests to submit scenarios and retrieve risk classifications.
+
+## Additional Notes
+- **Data Alignment:** Ensure all variables align by date; double-check for missing or misaligned entries.
+- **Enhancements:** Consider adding more features (e.g., additional lags) or experimenting with advanced boosting libraries like XGBoost.
+- **Interpretability:** Use feature importances to explain model predictions and build trust in the system.
+
+This `.prompt` file provides a quick reference to replicate the risk classifier system from data collection to deployment.
